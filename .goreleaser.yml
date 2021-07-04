@@ -1,3 +1,4 @@
+project_name: status-client
 before:
   hooks:
     - go mod tidy
@@ -36,3 +37,4 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+      - '^ci:'
