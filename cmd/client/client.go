@@ -16,10 +16,10 @@ import (
 
 var (
 	SERVER   = flag.String("h", "", "Input the host of the server")
-	PORT     = flag.Int("port", 35601, "Input the port of the server, default is 35601")
-	USER     = flag.String("u", "", "Input the port of the server")
-	PASSWORD = flag.String("p", "doub.io", "Input the client's password")
-	INTERVAL = flag.Int("interval", 2, "Input the INTERVAL, default is 2")
+	PORT     = flag.Int("port", 35601, "Input the port of the server")
+	USER     = flag.String("u", "", "Input the client's username")
+	PASSWORD = flag.String("p", "", "Input the client's password")
+	INTERVAL = flag.Int("interval", 2, "Input the INTERVAL")
 	DSN      = flag.String("dsn", "", "Input DSN, format: username:password@host:port")
 )
 
