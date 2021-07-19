@@ -19,7 +19,7 @@ var (
 	PORT     = flag.Int("port", 35601, "Input the port of the server")
 	USER     = flag.String("u", "", "Input the client's username")
 	PASSWORD = flag.String("p", "", "Input the client's password")
-	INTERVAL = flag.Int("interval", 2, "Input the INTERVAL")
+	INTERVAL = flag.Float64("interval", 1.5, "Input the INTERVAL")
 	DSN      = flag.String("dsn", "", "Input DSN, format: username:password@host:port")
 )
 
@@ -98,7 +98,7 @@ func main() {
 			n, err = conn.Read(buf[:])
 			log.Println(data[:n])
 		}
-		timer := 0
+		timer := 0.0
 		checkIP := 0
 		if strings.Contains(data, "IPv4") {
 			checkIP = 6
@@ -112,11 +112,11 @@ func main() {
 		item := &serverStatus{}
 		traffic := status.NewNetwork()
 		for {
-			CPU := status.Cpu(*INTERVAL)
+			CPU := status.Cpu(INTERVAL)
 			netRx, netTx := traffic.Speed()
 			netIn, netOut := traffic.Traffic()
 			memoryTotal, memoryUsed, swapTotal, swapUsed := status.Memory()
-			hddTotal, hddUsed := status.Disk()
+			hddTotal, hddUsed := status.Disk(INTERVAL)
 			uptime := status.Uptime()
 			load := status.Load()
 			item.CPU = CPU
@@ -138,7 +138,7 @@ func main() {
 				} else if checkIP == 6 {
 					item.Online6 = status.Network(checkIP)
 				}
-				timer = 150
+				timer = 150.0
 			}
 			timer -= 1 * *INTERVAL
 			data, _ := json.Marshal(item)

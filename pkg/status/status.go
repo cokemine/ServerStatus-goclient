@@ -12,11 +12,32 @@ import (
 	"time"
 )
 
-var invalidName = []string{"lo", "tun", "kube", "docker", "vmbr", "br-", "vnet", "veth"}
+var invalidInterface = []string{"lo", "tun", "kube", "docker", "vmbr", "br-", "vnet", "veth"}
+var validFs = []string{"ext4", "ext3", "ext2", "reiserfs", "jfs", "btrfs", "fuseblk", "zfs", "simfs", "ntfs", "fat32", "exfat", "xfs"}
+var cachedFs = make(map[string]struct{})
+var timer = 0.0
 
 type network struct {
 	rx *deque
 	tx *deque
+}
+
+func checkInterface(name string) bool {
+	for _, v := range invalidInterface {
+		if strings.Contains(name, v) {
+			return false
+		}
+	}
+	return true
+}
+
+func checkValidFs(name string) bool {
+	for _, v := range validFs {
+		if strings.ToLower(name) == v {
+			return true
+		}
+	}
+	return false
 }
 
 func NewNetwork() *network {
@@ -43,21 +64,30 @@ func Load() float64 {
 	return theLoad.Load1
 }
 
-func Disk() (uint64, uint64) {
+func Disk(INTERVAL *float64) (uint64, uint64) {
 	var (
 		size, used uint64
 	)
-	diskList, _ := disk.Partitions(false)
-	for _, d := range diskList {
-		usage, _ := disk.Usage(d.Mountpoint)
+	if timer <= 0 {
+		diskList, _ := disk.Partitions(false)
+		for _, d := range diskList {
+			if checkValidFs(d.Fstype) {
+				cachedFs[d.Mountpoint] = struct{}{}
+			}
+		}
+		timer = 150.0
+	}
+	timer -= *INTERVAL
+	for k := range cachedFs {
+		usage, _ := disk.Usage(k)
 		size += usage.Total / 1024.0 / 1024.0
 		used += usage.Used / 1024.0 / 1024.0
 	}
 	return size, used
 }
 
-func Cpu(INTERVAL int) float64 {
-	cpuInfo, _ := cpu.Percent(time.Duration(INTERVAL)*time.Second, true)
+func Cpu(INTERVAL *float64) float64 {
+	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL)*time.Second, true)
 	return cpuInfo[0]
 }
 
@@ -77,15 +107,6 @@ func Network(checkIP int) bool {
 	err = conn.Close()
 	if err != nil {
 		return false
-	}
-	return true
-}
-
-func checkInterface(name string) bool {
-	for _, v := range invalidName {
-		if strings.Contains(name, v) {
-			return false
-		}
 	}
 	return true
 }
