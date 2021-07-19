@@ -11,7 +11,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 )
 
 var (
@@ -21,14 +20,8 @@ var (
 	PASSWORD = flag.String("p", "", "Input the client's password")
 	INTERVAL = flag.Float64("interval", 1.5, "Input the INTERVAL")
 	DSN      = flag.String("dsn", "", "Input DSN, format: username:password@host:port")
+	isVnstat = flag.Bool("vnstat", false, "Use vnstat for traffic statistics, linux only")
 )
-
-func bytesToString(b []byte) string {
-	return *(*string)(unsafe.Pointer(&b))
-}
-func stringToBytes(s string) []byte {
-	return *(*[]byte)(unsafe.Pointer(&s))
-}
 
 type serverStatus struct {
 	Uptime      uint64  `json:"uptime"`
@@ -78,7 +71,7 @@ func main() {
 			continue
 		}
 		var buf [1024]byte
-		var data = bytesToString(buf[:])
+		var data = status.BytesToString(buf[:])
 		n, _ := conn.Read(buf[:])
 		if !strings.Contains(data, "Authentication required") || err != nil {
 			e := err
@@ -114,7 +107,16 @@ func main() {
 		for {
 			CPU := status.Cpu(INTERVAL)
 			netRx, netTx := traffic.Speed()
-			netIn, netOut := traffic.Traffic()
+			var netIn, netOut uint64
+			if !*isVnstat {
+				netIn, netOut = traffic.Traffic()
+			} else {
+				netIn, netOut, err = status.TrafficVnstat()
+				if err != nil {
+					log.Println("Please check if the installation of vnStat is correct")
+					os.Exit(1)
+				}
+			}
 			memoryTotal, memoryUsed, swapTotal, swapUsed := status.Memory()
 			hddTotal, hddUsed := status.Disk(INTERVAL)
 			uptime := status.Uptime()
@@ -142,7 +144,7 @@ func main() {
 			}
 			timer -= 1 * *INTERVAL
 			data, _ := json.Marshal(item)
-			_, err = conn.Write(stringToBytes("update " + bytesToString(data) + "\n"))
+			_, err = conn.Write(status.StringToBytes("update " + status.BytesToString(data) + "\n"))
 			if err != nil {
 				log.Println(err.Error())
 			}

@@ -8,36 +8,18 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	psutilNet "github.com/shirou/gopsutil/v3/net"
 	"net"
+	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
 
-var invalidInterface = []string{"lo", "tun", "kube", "docker", "vmbr", "br-", "vnet", "veth"}
-var validFs = []string{"ext4", "ext3", "ext2", "reiserfs", "jfs", "btrfs", "fuseblk", "zfs", "simfs", "ntfs", "fat32", "exfat", "xfs"}
 var cachedFs = make(map[string]struct{})
 var timer = 0.0
 
 type network struct {
 	rx *deque
 	tx *deque
-}
-
-func checkInterface(name string) bool {
-	for _, v := range invalidInterface {
-		if strings.Contains(name, v) {
-			return false
-		}
-	}
-	return true
-}
-
-func checkValidFs(name string) bool {
-	for _, v := range validFs {
-		if strings.ToLower(name) == v {
-			return true
-		}
-	}
-	return false
 }
 
 func NewNetwork() *network {
@@ -128,6 +110,23 @@ func (net *network) getTraffic() {
 
 func (net *network) Traffic() (uint64, uint64) {
 	return net.rx.tail.value, net.tx.tail.value
+}
+
+func TrafficVnstat() (uint64, uint64, error) {
+	buf, err := exec.Command("vnstat", "--oneline", "b").Output()
+	if err != nil {
+		return 0, 0, err
+	}
+	vData := strings.Split(BytesToString(buf), ";")
+	rx, err := strconv.ParseUint(vData[8], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	tx, err := strconv.ParseUint(vData[9], 10, 64)
+	if err != nil {
+		return 0, 0, err
+	}
+	return rx, tx, nil
 }
 
 func (net *network) Speed() (uint64, uint64) {
