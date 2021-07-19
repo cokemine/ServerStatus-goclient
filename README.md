@@ -30,13 +30,15 @@ chmod +x status-client
         Input DSN, format: username:password@host:port
   -h string
         Input the host of the server
-  -interval int
-        Input the INTERVAL (default 2)
+  -interval float
+        Input the INTERVAL (default 1.5)
   -p string
         Input the client's password
   -port int
         Input the port of the server (default 35601)
   -u string
         Input the client's username
+  -vnstat
+        Use vnstat for traffic statistics, linux only
 ```
 
