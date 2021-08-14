@@ -147,6 +147,7 @@ func main() {
 			_, err = conn.Write(status.StringToBytes("update " + status.BytesToString(data) + "\n"))
 			if err != nil {
 				log.Println(err.Error())
+				break
 			}
 		}
 	}
