@@ -100,8 +100,8 @@ func (net *network) getTraffic() {
 	netInfo, _ := psutilNet.IOCounters(true)
 	for _, v := range netInfo {
 		if checkInterface(v.Name) {
-			netIn += v.BytesSent
-			netOut += v.BytesRecv
+			netIn += v.BytesRecv
+			netOut += v.BytesSent
 		}
 	}
 	net.rx.push(netIn)
