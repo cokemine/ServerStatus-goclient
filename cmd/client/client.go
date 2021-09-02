@@ -137,10 +137,8 @@ func main() {
 			if timer <= 0 {
 				if checkIP == 4 {
 					item.Online4 = status.Network(checkIP)
-					item.Online6 = true
 				} else if checkIP == 6 {
 					item.Online6 = status.Network(checkIP)
-					item.Online4 = true
 				}
 				timer = 150.0
 			}
