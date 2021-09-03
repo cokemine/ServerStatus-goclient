@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"errors"
 	"flag"
 	"github.com/cokemine/ServerStatus-goclient/pkg/status"
 	"log"
@@ -41,6 +40,98 @@ type serverStatus struct {
 	Online6     bool    `json:"online6"`
 }
 
+func connect() {
+	log.Println("Connecting...")
+	conn, err := net.DialTimeout("tcp", *SERVER+":"+strconv.Itoa(*PORT), 30*time.Second)
+	if err != nil {
+		log.Println("Caught Exception:", err.Error())
+		time.Sleep(5 * time.Second)
+		return
+	}
+	defer func(conn net.Conn) {
+		_ = conn.Close()
+		time.Sleep(5 * time.Second)
+	}(conn)
+	var buf = make([]byte, 128)
+	var data = status.BytesToString(buf)
+	n, err := conn.Read(buf)
+	if err != nil {
+		log.Println("Caught Exception:", err.Error())
+		return
+	}
+	log.Println(data[:n])
+	if !strings.Contains(data, "Authentication required") || err != nil {
+		return
+	} else {
+		_, _ = conn.Write([]byte((*USER + ":" + *PASSWORD + "\n")))
+	}
+	n, _ = conn.Read(buf)
+	log.Println(data[:n])
+	if !strings.Contains(data, "Authentication successful") {
+		return
+	}
+	if !strings.Contains(data, "You are connecting via") {
+		n, _ = conn.Read(buf)
+		log.Println(data[:n])
+	}
+	timer := 0.0
+	checkIP := 0
+	if strings.Contains(data, "IPv4") {
+		checkIP = 6
+	} else if strings.Contains(data, "IPv6") {
+		checkIP = 4
+	} else {
+		return
+	}
+	item := &serverStatus{}
+	traffic := status.NewNetwork()
+	for {
+		CPU := status.Cpu(INTERVAL)
+		netRx, netTx := traffic.Speed()
+		var netIn, netOut uint64
+		if !*isVnstat {
+			netIn, netOut = traffic.Traffic()
+		} else {
+			netIn, netOut, err = status.TrafficVnstat()
+			if err != nil {
+				log.Println("Please check if the installation of vnStat is correct")
+			}
+		}
+		memoryTotal, memoryUsed, swapTotal, swapUsed := status.Memory()
+		hddTotal, hddUsed := status.Disk(INTERVAL)
+		uptime := status.Uptime()
+		load := status.Load()
+		item.CPU = CPU
+		item.Load = load
+		item.Uptime = uptime
+		item.MemoryTotal = memoryTotal
+		item.MemoryUsed = memoryUsed
+		item.SwapTotal = swapTotal
+		item.SwapUsed = swapUsed
+		item.HddTotal = hddTotal
+		item.HddUsed = hddUsed
+		item.NetworkRx = netRx
+		item.NetworkTx = netTx
+		item.NetworkIn = netIn
+		item.NetworkOut = netOut
+		if timer <= 0 {
+			if checkIP == 4 {
+				item.Online4 = status.Network(checkIP)
+			} else if checkIP == 6 {
+				item.Online6 = status.Network(checkIP)
+			}
+			timer = 150.0
+		}
+		timer -= 1 * *INTERVAL
+		data, _ := json.Marshal(item)
+		_, err = conn.Write(status.StringToBytes("update " + status.BytesToString(data) + "\n"))
+		if err != nil {
+			log.Println(err.Error())
+			break
+		}
+	}
+}
+
 func main() {
 	flag.Parse()
 	if *DSN != "" {
@@ -63,92 +154,6 @@ func main() {
 		os.Exit(1)
 	}
 	for {
-		log.Println("Connecting...")
-		conn, err := net.DialTimeout("tcp", *SERVER+":"+strconv.Itoa(*PORT), 30*time.Second)
-		if err != nil {
-			log.Println("Caught Exception:", err.Error())
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		var buf [1024]byte
-		var data = status.BytesToString(buf[:])
-		n, _ := conn.Read(buf[:])
-		if !strings.Contains(data, "Authentication required") || err != nil {
-			e := err
-			if e == nil {
-				log.Println(data[:n])
-				e = errors.New("authentication error")
-			}
-			log.Println("Caught Exception:", e.Error())
-			time.Sleep(5 * time.Second)
-			continue
-		} else {
-			_, _ = conn.Write([]byte((*USER + ":" + *PASSWORD + "\n")))
-		}
-		n, _ = conn.Read(buf[:])
-		log.Println(data[:n])
-		if !strings.Contains(data, "You are connecting via") {
-			n, err = conn.Read(buf[:])
-			log.Println(data[:n])
-		}
-		timer := 0.0
-		checkIP := 0
-		if strings.Contains(data, "IPv4") {
-			checkIP = 6
-		} else if strings.Contains(data, "IPv6") {
-			checkIP = 4
-		} else {
-			log.Println(data[:n])
-			time.Sleep(5 * time.Second)
-			continue
-		}
-		item := &serverStatus{}
-		traffic := status.NewNetwork()
-		for {
-			CPU := status.Cpu(INTERVAL)
-			netRx, netTx := traffic.Speed()
-			var netIn, netOut uint64
-			if !*isVnstat {
-				netIn, netOut = traffic.Traffic()
-			} else {
-				netIn, netOut, err = status.TrafficVnstat()
-				if err != nil {
-					log.Println("Please check if the installation of vnStat is correct")
-					os.Exit(1)
-				}
-			}
-			memoryTotal, memoryUsed, swapTotal, swapUsed := status.Memory()
-			hddTotal, hddUsed := status.Disk(INTERVAL)
-			uptime := status.Uptime()
-			load := status.Load()
-			item.CPU = CPU
-			item.Load = load
-			item.Uptime = uptime
-			item.MemoryTotal = memoryTotal
-			item.MemoryUsed = memoryUsed
-			item.SwapTotal = swapTotal
-			item.SwapUsed = swapUsed
-			item.HddTotal = hddTotal
-			item.HddUsed = hddUsed
-			item.NetworkRx = netRx
-			item.NetworkTx = netTx
-			item.NetworkIn = netIn
-			item.NetworkOut = netOut
-			if timer <= 0 {
-				if checkIP == 4 {
-					item.Online4 = status.Network(checkIP)
-				} else if checkIP == 6 {
-					item.Online6 = status.Network(checkIP)
-				}
-				timer = 150.0
-			}
-			timer -= 1 * *INTERVAL
-			data, _ := json.Marshal(item)
-			_, err = conn.Write(status.StringToBytes("update " + status.BytesToString(data) + "\n"))
-			if err != nil {
-				log.Println(err.Error())
-				break
-			}
-		}
+		connect()
 	}
 }
