@@ -76,9 +76,9 @@ func Cpu(INTERVAL *float64) float64 {
 func Network(checkIP int) bool {
 	var HOST string
 	if checkIP == 4 {
-		HOST = "ipv4.google.com:80"
+		HOST = "8.8.8.8:53"
 	} else if checkIP == 6 {
-		HOST = "ipv6.google.com:80"
+		HOST = "[2001:4860:4860::8888]:53"
 	} else {
 		return false
 	}
