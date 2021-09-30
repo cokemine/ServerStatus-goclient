@@ -31,14 +31,13 @@ func NewNetwork() *network {
 }
 
 func Uptime() uint64 {
-	uptime, _ := host.Uptime()
-	return uptime
+	bootTime, _ := host.BootTime()
+	return uint64(time.Now().Unix()) - bootTime
 }
 
 func Memory() (uint64, uint64, uint64, uint64) {
 	memory, _ := mem.VirtualMemory()
-	swap, _ := mem.SwapMemory()
-	return memory.Total / 1024.0, memory.Used / 1024.0, swap.Total / 1024.0, swap.Used / 1024.0
+	return memory.Total / 1024.0, memory.Used / 1024.0, memory.SwapTotal / 1024.0, (memory.SwapTotal - memory.SwapFree) / 1024.0
 }
 
 func Load() float64 {
