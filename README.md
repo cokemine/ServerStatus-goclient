@@ -31,7 +31,7 @@ chmod +x status-client
   -h string
         Input the host of the server
   -interval float
-        Input the INTERVAL (default 1.5)
+        Input the INTERVAL (default 2.0)
   -p string
         Input the client's password
   -port int

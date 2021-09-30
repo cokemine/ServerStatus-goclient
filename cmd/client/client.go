@@ -17,7 +17,7 @@ var (
 	PORT     = flag.Int("port", 35601, "Input the port of the server")
 	USER     = flag.String("u", "", "Input the client's username")
 	PASSWORD = flag.String("p", "", "Input the client's password")
-	INTERVAL = flag.Float64("interval", 1.5, "Input the INTERVAL")
+	INTERVAL = flag.Float64("interval", 2.0, "Input the INTERVAL")
 	DSN      = flag.String("dsn", "", "Input DSN, format: username:password@host:port")
 	isVnstat = flag.Bool("vnstat", false, "Use vnstat for traffic statistics, linux only")
 )
