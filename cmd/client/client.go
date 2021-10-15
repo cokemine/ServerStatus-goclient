@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"github.com/cokemine/ServerStatus-goclient/pkg/status"
 	"log"
 	"net"
@@ -23,21 +24,21 @@ var (
 )
 
 type serverStatus struct {
-	Uptime      uint64  `json:"uptime"`
-	Load        float64 `json:"load"`
-	MemoryTotal uint64  `json:"memory_total"`
-	MemoryUsed  uint64  `json:"memory_used"`
-	SwapTotal   uint64  `json:"swap_total"`
-	SwapUsed    uint64  `json:"swap_used"`
-	HddTotal    uint64  `json:"hdd_total"`
-	HddUsed     uint64  `json:"hdd_used"`
-	CPU         float64 `json:"cpu"`
-	NetworkTx   uint64  `json:"network_tx"`
-	NetworkRx   uint64  `json:"network_rx"`
-	NetworkIn   uint64  `json:"network_in"`
-	NetworkOut  uint64  `json:"network_out"`
-	Online4     bool    `json:"online4"`
-	Online6     bool    `json:"online6"`
+	Uptime      uint64      `json:"uptime"`
+	Load        json.Number `json:"load"`
+	MemoryTotal uint64      `json:"memory_total"`
+	MemoryUsed  uint64      `json:"memory_used"`
+	SwapTotal   uint64      `json:"swap_total"`
+	SwapUsed    uint64      `json:"swap_used"`
+	HddTotal    uint64      `json:"hdd_total"`
+	HddUsed     uint64      `json:"hdd_used"`
+	CPU         json.Number `json:"cpu"`
+	NetworkTx   uint64      `json:"network_tx"`
+	NetworkRx   uint64      `json:"network_rx"`
+	NetworkIn   uint64      `json:"network_in"`
+	NetworkOut  uint64      `json:"network_out"`
+	Online4     bool        `json:"online4"`
+	Online6     bool        `json:"online6"`
 }
 
 func connect() {
@@ -101,8 +102,8 @@ func connect() {
 		hddTotal, hddUsed := status.Disk(INTERVAL)
 		uptime := status.Uptime()
 		load := status.Load()
-		item.CPU = CPU
-		item.Load = load
+		item.CPU = json.Number(fmt.Sprintf("%.1f", CPU))
+		item.Load = json.Number(fmt.Sprintf("%.2f", load))
 		item.Uptime = uptime
 		item.MemoryTotal = memoryTotal
 		item.MemoryUsed = memoryUsed

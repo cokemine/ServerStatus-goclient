@@ -7,6 +7,7 @@ import (
 	"github.com/shirou/gopsutil/v3/load"
 	"github.com/shirou/gopsutil/v3/mem"
 	psutilNet "github.com/shirou/gopsutil/v3/net"
+	"math"
 	"net"
 	"os/exec"
 	"strconv"
@@ -69,7 +70,7 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 
 func Cpu(INTERVAL *float64) float64 {
 	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL)*time.Second, true)
-	return cpuInfo[0]
+	return math.Round(cpuInfo[0]*10) / 10
 }
 
 func Network(checkIP int) bool {
