@@ -7,4 +7,7 @@ retract (
 	v1.1.3
 )
 
-require github.com/shirou/gopsutil/v3 v3.21.9
+require (
+	github.com/json-iterator/go v1.1.12
+	github.com/shirou/gopsutil/v3 v3.21.9
+)

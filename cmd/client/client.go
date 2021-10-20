@@ -1,10 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/cokemine/ServerStatus-goclient/pkg/status"
+	jsoniter "github.com/json-iterator/go"
 	"log"
 	"net"
 	"os"
@@ -23,16 +23,18 @@ var (
 	isVnstat = flag.Bool("vnstat", false, "Use vnstat for traffic statistics, linux only")
 )
 
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
 type serverStatus struct {
 	Uptime      uint64      `json:"uptime"`
-	Load        json.Number `json:"load"`
+	Load        jsoniter.Number `json:"load"`
 	MemoryTotal uint64      `json:"memory_total"`
 	MemoryUsed  uint64      `json:"memory_used"`
 	SwapTotal   uint64      `json:"swap_total"`
 	SwapUsed    uint64      `json:"swap_used"`
 	HddTotal    uint64      `json:"hdd_total"`
 	HddUsed     uint64      `json:"hdd_used"`
-	CPU         json.Number `json:"cpu"`
+	CPU         jsoniter.Number `json:"cpu"`
 	NetworkTx   uint64      `json:"network_tx"`
 	NetworkRx   uint64      `json:"network_rx"`
 	NetworkIn   uint64      `json:"network_in"`
@@ -102,8 +104,8 @@ func connect() {
 		hddTotal, hddUsed := status.Disk(INTERVAL)
 		uptime := status.Uptime()
 		load := status.Load()
-		item.CPU = json.Number(fmt.Sprintf("%.1f", CPU))
-		item.Load = json.Number(fmt.Sprintf("%.2f", load))
+		item.CPU = jsoniter.Number(fmt.Sprintf("%.1f", CPU))
+		item.Load = jsoniter.Number(fmt.Sprintf("%.2f", load))
 		item.Uptime = uptime
 		item.MemoryTotal = memoryTotal
 		item.MemoryUsed = memoryUsed
