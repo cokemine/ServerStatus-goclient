@@ -61,7 +61,11 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 	}
 	timer -= *INTERVAL
 	for k := range cachedFs {
-		usage, _ := disk.Usage(k)
+		usage, err := disk.Usage(k)
+		if err != nil {
+			delete(cachedFs, k)
+			continue
+		}
 		size += usage.Total / 1024.0 / 1024.0
 		used += usage.Used / 1024.0 / 1024.0
 	}
