@@ -9,5 +9,5 @@ retract (
 
 require (
 	github.com/json-iterator/go v1.1.12
-	github.com/shirou/gopsutil/v3 v3.21.10
+	github.com/shirou/gopsutil/v3 v3.21.12
 )
