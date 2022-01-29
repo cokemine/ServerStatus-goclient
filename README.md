@@ -23,6 +23,30 @@ chmod +x status-client
 
 默认端口号是35601，所以你可以忽略端口号不写，即直接写`username:password@yourip`
 
+或者使用一键脚本
+
+```shell
+
+wget https://raw.githubusercontent.com/cokemine/ServerStatus-goclient/master/install.sh
+
+#安装
+
+bash install.sh
+
+#或
+
+bash install.sh -dsn username:password@yourip:35601
+
+#修改配置
+
+bash install.sh reset_conf #(re)
+
+#卸载
+
+bash install.sh uninstall #(uni)
+
+```
+
 ## Usage
 
 ```
