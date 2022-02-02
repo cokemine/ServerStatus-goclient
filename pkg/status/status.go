@@ -122,6 +122,10 @@ func TrafficVnstat() (uint64, uint64, error) {
 		return 0, 0, err
 	}
 	vData := strings.Split(BytesToString(buf), ";")
+ 	if len(vData) != 15 {
+		// Not enough data available yet.
+		return 0, 0, nil
+	}
 	rx, err := strconv.ParseUint(vData[8], 10, 64)
 	if err != nil {
 		return 0, 0, err
