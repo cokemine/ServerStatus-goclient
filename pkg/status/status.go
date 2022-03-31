@@ -73,7 +73,7 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 }
 
 func Cpu(INTERVAL *float64) float64 {
-	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL)*time.Second, true)
+	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL*float64(time.Second)), true)
 	return math.Round(cpuInfo[0]*10) / 10
 }
 
@@ -122,7 +122,7 @@ func TrafficVnstat() (uint64, uint64, error) {
 		return 0, 0, err
 	}
 	vData := strings.Split(BytesToString(buf), ";")
- 	if len(vData) != 15 {
+	if len(vData) != 15 {
 		// Not enough data available yet.
 		return 0, 0, nil
 	}
