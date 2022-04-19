@@ -73,7 +73,7 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 }
 
 func Cpu(INTERVAL *float64) float64 {
-	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL*float64(time.Second)), true)
+	cpuInfo, _ := cpu.Percent(time.Duration(*INTERVAL*float64(time.Second)), false)
 	return math.Round(cpuInfo[0]*10) / 10
 }
 
