@@ -14,17 +14,19 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Go
-        uses: actions/setup-go@v3
-        with:
-          go-version: 1.16
-
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PACKAGE_NAME: github.com/cokemine/ServerStatus-goclient
+        run: |-
+          docker run \
+              --rm \
+              --privileged \
+              -e GITHUB_TOKEN=${GITHUB_TOKEN} \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v $(pwd):/go/src/${PACKAGE_NAME} \
+              -v $(pwd)/sysroot:/sysroot \
+              -w /go/src/${PACKAGE_NAME} \
+              goreleaser/goreleaser-cross \
+              -f .goreleaser_action.yml \
+              release --rm-dist 
