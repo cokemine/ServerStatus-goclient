@@ -46,12 +46,17 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 	)
 	if timer <= 0 {
 		diskList, _ := disk.Partitions(false)
+		devices := make(map[string]bool)
 		for _, d := range diskList {
 			if checkValidFs(d.Fstype) {
+				if devices[d.Device] {
+					continue
+				}
 				cachedFs[d.Mountpoint] = struct{}{}
+				devices[d.Device] = true
 			}
 		}
-		timer = 150.0
+		timer = 300.0
 	}
 	timer -= *INTERVAL
 	for k := range cachedFs {
