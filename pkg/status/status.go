@@ -5,7 +5,6 @@ import (
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/load"
-	"github.com/shirou/gopsutil/v3/mem"
 	psutilNet "github.com/shirou/gopsutil/v3/net"
 	"math"
 	"net"
@@ -34,11 +33,6 @@ func NewNetwork() *network {
 func Uptime() uint64 {
 	bootTime, _ := host.BootTime()
 	return uint64(time.Now().Unix()) - bootTime
-}
-
-func Memory() (uint64, uint64, uint64, uint64) {
-	memory, _ := mem.VirtualMemory()
-	return memory.Total / 1024.0, memory.Used / 1024.0, memory.SwapTotal / 1024.0, (memory.SwapTotal - memory.SwapFree) / 1024.0
 }
 
 func Load() float64 {
