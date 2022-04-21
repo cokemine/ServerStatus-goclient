@@ -48,10 +48,7 @@ func Disk(INTERVAL *float64) (uint64, uint64) {
 		diskList, _ := disk.Partitions(false)
 		devices := make(map[string]bool)
 		for _, d := range diskList {
-			if checkValidFs(d.Fstype) {
-				if devices[d.Device] {
-					continue
-				}
+			if !devices[d.Device] && checkValidFs(d.Fstype) {
 				cachedFs[d.Mountpoint] = struct{}{}
 				devices[d.Device] = true
 			}
