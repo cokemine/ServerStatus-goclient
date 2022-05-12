@@ -7,7 +7,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"log"
 	"net"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,22 +24,22 @@ var (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-type serverStatus struct {
-	Uptime      uint64      `json:"uptime"`
+type ServerStatus struct {
+	Uptime      uint64          `json:"uptime"`
 	Load        jsoniter.Number `json:"load"`
-	MemoryTotal uint64      `json:"memory_total"`
-	MemoryUsed  uint64      `json:"memory_used"`
-	SwapTotal   uint64      `json:"swap_total"`
-	SwapUsed    uint64      `json:"swap_used"`
-	HddTotal    uint64      `json:"hdd_total"`
-	HddUsed     uint64      `json:"hdd_used"`
+	MemoryTotal uint64          `json:"memory_total"`
+	MemoryUsed  uint64          `json:"memory_used"`
+	SwapTotal   uint64          `json:"swap_total"`
+	SwapUsed    uint64          `json:"swap_used"`
+	HddTotal    uint64          `json:"hdd_total"`
+	HddUsed     uint64          `json:"hdd_used"`
 	CPU         jsoniter.Number `json:"cpu"`
-	NetworkTx   uint64      `json:"network_tx"`
-	NetworkRx   uint64      `json:"network_rx"`
-	NetworkIn   uint64      `json:"network_in"`
-	NetworkOut  uint64      `json:"network_out"`
-	Online4     bool        `json:"online4"`
-	Online6     bool        `json:"online6"`
+	NetworkTx   uint64          `json:"network_tx"`
+	NetworkRx   uint64          `json:"network_rx"`
+	NetworkIn   uint64          `json:"network_in"`
+	NetworkOut  uint64          `json:"network_out"`
+	Online4     bool            `json:"online4"`
+	Online6     bool            `json:"online6"`
 }
 
 func connect() {
@@ -86,22 +85,21 @@ func connect() {
 	} else {
 		return
 	}
-	item := &serverStatus{}
-	traffic := status.NewNetwork()
+	item := ServerStatus{}
 	for {
-		CPU := status.Cpu(INTERVAL)
-		netRx, netTx := traffic.Speed()
-		var netIn, netOut uint64
+		CPU := status.Cpu(*INTERVAL)
+		var netIn, netOut, netRx, netTx uint64
 		if !*isVnstat {
-			netIn, netOut = traffic.Traffic()
+			netIn, netOut, netRx, netTx = status.Traffic(*INTERVAL)
 		} else {
+			_, _, netRx, netTx = status.Traffic(*INTERVAL)
 			netIn, netOut, err = status.TrafficVnstat()
 			if err != nil {
 				log.Println("Please check if the installation of vnStat is correct")
 			}
 		}
 		memoryTotal, memoryUsed, swapTotal, swapUsed := status.Memory()
-		hddTotal, hddUsed := status.Disk(INTERVAL)
+		hddTotal, hddUsed := status.Disk(*INTERVAL)
 		uptime := status.Uptime()
 		load := status.Load()
 		item.CPU = jsoniter.Number(fmt.Sprintf("%.1f", CPU))
@@ -125,7 +123,7 @@ func connect() {
 			}
 			timer = 150.0
 		}
-		timer -= 1 * *INTERVAL
+		timer -= *INTERVAL
 		data, _ := json.Marshal(item)
 		_, err = conn.Write(status.StringToBytes("update " + status.BytesToString(data) + "\n"))
 		if err != nil {
@@ -149,12 +147,10 @@ func main() {
 		}
 	}
 	if *PORT < 1 || *PORT > 65535 {
-		log.Println("Check the port you input")
-		os.Exit(1)
+		log.Fatal("Check the port you input")
 	}
 	if *SERVER == "" || *USER == "" || *PASSWORD == "" {
-		log.Println("HOST, USERNAME, PASSWORD must not be blank!")
-		os.Exit(1)
+		log.Fatal("HOST, USERNAME, PASSWORD must not be blank!")
 	}
 	for {
 		connect()
