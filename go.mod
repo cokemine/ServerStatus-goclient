@@ -1,6 +1,6 @@
 module github.com/cokemine/ServerStatus-goclient
 
-go 1.16
+go 1.18
 
 retract (
 	v1.1.4
